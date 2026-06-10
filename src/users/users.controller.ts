@@ -1,10 +1,12 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
+  // Put,
   Query,
 } from '@nestjs/common';
 
@@ -33,7 +35,7 @@ export class UsersController {
   // }
 
   // cách 1 : truyền thông qua query
-  @Get()
+  @Get() // => /users?key=somthing
   getUsers(@Query('name') query) {
     console.log('>>> query', query); // query.fullname
     return this.users;
@@ -46,10 +48,14 @@ export class UsersController {
     // ];
   }
   // cách 2: truyền thông qua path param
-  @Get(':id')
-  getUser(@Param('id') id) {
+  @Get(':id') // => /users/id
+  getUser(@Param('id') id: string) {
     // console.log('>>> param', id);
     const userFound = this.users.find((user) => user.id === parseInt(id));
+    if (!userFound) {
+      // throw new Error('user not found');
+      return 'User not found in list user';
+    }
     return userFound;
   }
 
@@ -63,11 +69,59 @@ export class UsersController {
   // }
 
   @Post()
-  createUser() {}
+  createUser(@Body() userCreate: User) {
+    // Validate data
+    if (typeof userCreate.id !== 'number') {
+      return 'id must be a number';
+    }
+    if (typeof userCreate.fullName !== 'string') {
+      return 'fullName must be a string';
+    }
+    // Create new data
+    // Thêm user mới vào cuối mảng
+    this.users.push(userCreate);
+    return userCreate;
+  }
 
-  @Put()
-  updateUsers() {}
+  @Patch(':id')
+  updateUsers(@Param('id') id: string, @Body() userUpdate: User) {
+    // User exist
+    const userFound = this.users.find((user) => user.id === parseInt(id));
+    if (!userFound) {
+      throw new Error('user not found');
+      // return 'User not found in list user';
+    }
+    // Validate data
+    if (
+      userUpdate.fullName !== undefined &&
+      typeof userUpdate.fullName !== 'string'
+    ) {
+      return 'fullName must be a string';
+    }
 
-  @Delete()
-  deleteUsers() {}
+    // Update data
+    const UpdateUser = this.users.map((user) => {
+      if (user.id === userFound.id) {
+        return { ...user, ...userUpdate };
+      }
+      return user;
+    });
+    this.users = UpdateUser;
+    return userUpdate;
+  }
+
+  @Delete(':id')
+  deleteUsers(@Param('id') id: string) {
+    // User exist
+    const userDeleted = this.users.find((user) => user.id === parseInt(id));
+    if (!userDeleted) {
+      throw new Error('user not found');
+      // return 'User not found in list user';
+    }
+    // Delete data
+    const DeleteUser = this.users.filter((user) => user.id !== userDeleted.id);
+    // danh sách user hiện tại = danh sách user sau khi đã delete
+    this.users = DeleteUser;
+    return userDeleted;
+  }
 }
