@@ -9,55 +9,31 @@ import {
   // Put,
   Query,
 } from '@nestjs/common';
+import type { User } from './users.entity';
+import { UsersService } from './user.service';
 
-type User = {
-  id: number;
-  fullName: string;
-};
 @Controller('users')
 export class UsersController {
-  private users: User[] = [
-    { id: 1, fullName: 'Hung' },
-    { id: 2, fullName: 'Viet' },
-    { id: 3, fullName: 'On' },
-    { id: 4, fullName: 'Van' },
-    { id: 5, fullName: 'Ly' },
-  ];
-  // @Get()
-  // getUsers() {
-  //   return [
-  //     { id: 1, fullName: 'Hung' },
-  //     { id: 2, fullName: 'Viet' },
-  //     { id: 3, fullName: 'On' },
-  //     { id: 4, fullName: 'Van' },
-  //     { id: 5, fullName: 'Ly' },
-  //   ];
-  // }
-
+  constructor(private readonly usersService: UsersService) {}
+  // nhiệm vụ chỉ gọi đến UsersService
   // cách 1 : truyền thông qua query
   @Get() // => /users?key=somthing
   getUsers(@Query('name') query) {
-    console.log('>>> query', query); // query.fullname
-    return this.users;
-    // [
-    //   { id: 1, fullName: 'Hung' },
-    //   { id: 2, fullName: 'Viet' },
-    //   { id: 3, fullName: 'On' },
-    //   { id: 4, fullName: 'Van' },
-    //   { id: 5, fullName: 'Ly' },
-    // ];
+    return this.usersService.getUsers(query);
   }
+  // Chỉ có nhiệm vụ nhận query và chuyển xuống Service.
   // cách 2: truyền thông qua path param
   @Get(':id') // => /users/id
   getUser(@Param('id') id: string) {
     // console.log('>>> param', id);
-    const userFound = this.users.find((user) => user.id === parseInt(id));
-    if (!userFound) {
-      // throw new Error('user not found');
-      return 'User not found in list user';
-    }
-    return userFound;
+    // const userFound = this.users.find((user) => user.id === parseInt(id));
+    // if (!userFound) {
+    //   // throw new Error('user not found');
+    //   return 'User not found in list user';
+    // }
+    return this.usersService.getUser(id);
   }
+  // Chỉ có nhiệm vụ nhận query và chuyển xuống Service.
 
   // @Get(':id') @Query('name') query)
   // getUser(@Param('id') id) {
@@ -70,58 +46,32 @@ export class UsersController {
 
   @Post()
   createUser(@Body() userCreate: User) {
-    // Validate data
-    if (typeof userCreate.id !== 'number') {
-      return 'id must be a number';
-    }
-    if (typeof userCreate.fullName !== 'string') {
-      return 'fullName must be a string';
-    }
-    // Create new data
-    // Thêm user mới vào cuối mảng
-    this.users.push(userCreate);
-    return userCreate;
+    return this.usersService.createUser(userCreate);
   }
+  // Controller chịu trách nhiệm lấy dữ liệu từ Request
 
   @Patch(':id')
   updateUsers(@Param('id') id: string, @Body() userUpdate: User) {
-    // User exist
-    const userFound = this.users.find((user) => user.id === parseInt(id));
-    if (!userFound) {
-      throw new Error('user not found');
-      // return 'User not found in list user';
-    }
-    // Validate data
-    if (
-      userUpdate.fullName !== undefined &&
-      typeof userUpdate.fullName !== 'string'
-    ) {
-      return 'fullName must be a string';
-    }
-
-    // Update data
-    const UpdateUser = this.users.map((user) => {
-      if (user.id === userFound.id) {
-        return { ...user, ...userUpdate };
-      }
-      return user;
-    });
-    this.users = UpdateUser;
-    return userUpdate;
+    return this.usersService.updateUsers(id, userUpdate);
   }
 
   @Delete(':id')
   deleteUsers(@Param('id') id: string) {
     // User exist
-    const userDeleted = this.users.find((user) => user.id === parseInt(id));
-    if (!userDeleted) {
-      throw new Error('user not found');
-      // return 'User not found in list user';
-    }
-    // Delete data
-    const DeleteUser = this.users.filter((user) => user.id !== userDeleted.id);
-    // danh sách user hiện tại = danh sách user sau khi đã delete
-    this.users = DeleteUser;
-    return userDeleted;
+    // const userDeleted = this.users.find((user) => user.id === parseInt(id));
+    // if (!userDeleted) {
+    //   throw new Error('user not found');
+    //   // return 'User not found in list user';
+    // }
+    // // Delete data
+    // const DeleteUser = this.users.filter((user) => user.id !== userDeleted.id);
+    // // danh sách user hiện tại = danh sách user sau khi đã delete
+    // this.users = DeleteUser;
+    return this.usersService.deleteUsers(id);
   }
 }
+// Controller = giao tiếp với HTTP Request/Response => mới có:
+// @Param()
+// @Query()
+// @Body()
+// @Headers()

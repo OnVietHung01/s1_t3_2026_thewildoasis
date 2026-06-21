@@ -8,6 +8,8 @@ export class AppController {
   @Get()
   getHello(): string {
     // return 'Hello viethung';
-    return this.appService.getHello();
+    // return this.appService.getHello();
+    const data = this.appService.getHello();
+    return data;
   }
 }
